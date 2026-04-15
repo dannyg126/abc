@@ -1,0 +1,1092 @@
+[justworks_playbook_v3.html](https://github.com/user-attachments/files/26763246/justworks_playbook_v3.html)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outbound Playbook — Justworks AE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:           #f2efe8;
+    --surface:      #faf8f3;
+    --surface2:     #ede9e0;
+    --surface3:     #e3ddd2;
+    --border:       #cfc8b8;
+    --border-light: #ddd8ce;
+
+    --navy:         #1a2e46;
+    --navy-mid:     #274260;
+    --navy-muted:   #3d5470;
+
+    --sage:         #3d6b55;
+    --sage-mid:     #4e8468;
+    --sage-bg:      #edf4f0;
+    --sage-border:  #b5d3c5;
+
+    --rust:         #a04e2a;
+    --rust-mid:     #c0663a;
+    --rust-bg:      #faf0eb;
+    --rust-border:  #e8c4b0;
+
+    --slate:        #4a6080;
+    --slate-bg:     #edf1f6;
+    --slate-border: #b8c8d8;
+
+    --amber:        #7a5c14;
+    --amber-bg:     #fdf7e8;
+    --amber-border: #d4be80;
+
+    --plum:         #5e3a7a;
+    --plum-bg:      #f5effe;
+    --plum-border:  #c5a8e0;
+
+    --text:         #1a2e46;
+    --text-body:    #333d4d;
+    --text-muted:   #607080;
+    --text-light:   #8898a8;
+
+    --tier1:        #3d6b55;
+    --tier2:        #7a5c14;
+    --tier3:        #a04e2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-body);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    padding: 52px 64px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -80px;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(61,107,85,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sage-mid) 0%, var(--slate) 50%, var(--rust-mid) 100%);
+  }
+  .header-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.38); margin-bottom: 20px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(34px, 5vw, 58px);
+    font-weight: 700; line-height: 1.08; color: #fff;
+    margin-bottom: 10px;
+  }
+  .header h1 em { font-style: italic; color: #a8c8b0; }
+  .header-sub {
+    font-size: 15px; color: rgba(255,255,255,0.42);
+    font-weight: 300; font-style: italic; margin-top: 14px;
+  }
+  .header-meta {
+    display: flex; gap: 12px; margin-top: 32px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .meta-pill {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 6px; padding: 7px 14px;
+    font-size: 12px; color: rgba(255,255,255,0.55);
+  }
+  .meta-pill strong { color: #a8c8b0; font-weight: 500; }
+
+  /* ── EDIT TOGGLE ── */
+  .edit-toggle-wrap { margin-left: auto; }
+  .edit-toggle {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px; padding: 7px 14px; cursor: pointer;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.45); transition: all 0.2s; user-select: none;
+  }
+  .edit-toggle:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.75); }
+  .edit-toggle.active { border-color: #a8c8b0; color: #a8c8b0; background: rgba(168,200,176,0.1); }
+  .edit-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.2s; }
+  .edit-toggle.active .edit-dot { background: #a8c8b0; }
+
+  /* ── EDIT BANNER ── */
+  .edit-banner {
+    display: none; background: var(--sage-bg);
+    border-bottom: 1px solid var(--sage-border);
+    padding: 10px 64px; font-size: 12px;
+    letter-spacing: 0.06em; color: var(--sage); font-weight: 500;
+  }
+  body.edit-mode .edit-banner { display: block; }
+
+  /* ── SAVE INDICATOR ── */
+  .save-indicator {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 18px;
+    font-size: 12px; color: var(--text-muted);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    z-index: 100; box-shadow: 0 2px 12px rgba(26,46,70,0.1);
+  }
+  .save-indicator.show { opacity: 1; }
+  .save-indicator.saved { color: var(--sage); border-color: var(--sage-mid); }
+
+  /* ── EDITABLE ── */
+  [contenteditable="true"] { outline: none; border-radius: 3px; transition: background 0.15s; }
+  body.edit-mode [contenteditable="true"]:hover { background: rgba(61,107,85,0.06); box-shadow: 0 0 0 1px rgba(61,107,85,0.22); }
+  body.edit-mode [contenteditable="true"]:focus { background: rgba(61,107,85,0.09); box-shadow: 0 0 0 1px rgba(61,107,85,0.38); }
+  body:not(.edit-mode) [contenteditable="true"] { cursor: default; pointer-events: none; }
+
+  /* ── NAV ── */
+  .nav {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 64px; display: flex; overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 16px 20px; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    border-bottom: 2px solid transparent; color: var(--text-muted);
+    white-space: nowrap; transition: all 0.2s; user-select: none;
+  }
+  .nav-tab:hover { color: var(--navy); }
+  .nav-tab.active { color: var(--navy); border-bottom-color: var(--rust); }
+
+  /* ── MAIN ── */
+  .main { padding: 52px 64px; max-width: 1080px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── HEADINGS ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 700; color: var(--navy); margin-bottom: 8px;
+  }
+  .section-desc {
+    color: var(--text-muted); font-size: 15px; font-style: italic;
+    margin-bottom: 40px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--border); font-weight: 300;
+  }
+
+  /* ── PRINCIPLE ── */
+  .principle {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--navy); padding: 22px 26px;
+    margin-bottom: 28px; border-radius: 2px;
+  }
+  .principle-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--navy-muted); margin-bottom: 10px;
+  }
+  .principle p { color: var(--text-body); font-size: 14px; line-height: 1.8; }
+  .principle p strong { color: var(--navy); font-weight: 600; }
+
+  /* ── METRICS ── */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 36px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; text-align: center;
+  }
+  .metric-num {
+    font-family: 'Playfair Display', serif; font-size: 38px;
+    font-weight: 700; color: var(--navy); display: block;
+  }
+  .metric-label { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+  /* ── DAY CARDS ── */
+  .day-grid { display: grid; gap: 14px; }
+  .day-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .day-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 17px 26px; border-bottom: 1px solid var(--border-light);
+    cursor: pointer; user-select: none; transition: background 0.15s;
+  }
+  .day-header:hover { background: var(--surface2); }
+  .day-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; color: var(--navy); }
+  .day-meta { display: flex; gap: 10px; align-items: center; }
+  .day-badge { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; }
+  .badge-busy { background: var(--rust-bg); color: var(--rust); border: 1px solid var(--rust-border); }
+  .badge-slow { background: var(--sage-bg); color: var(--sage); border: 1px solid var(--sage-border); }
+  .chevron { color: var(--text-light); transition: transform 0.2s; font-size: 14px; }
+  .day-card.open .chevron { transform: rotate(180deg); }
+  .day-body { display: none; padding: 28px 26px; }
+  .day-card.open .day-body { display: block; }
+
+  /* ── TIME BLOCKS ── */
+  .time-block { display: grid; grid-template-columns: 110px 1fr; margin-bottom: 28px; }
+  .time-label { padding: 14px 18px 14px 0; border-right: 1px solid var(--border); margin-right: 24px; }
+  .time-text { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rust); }
+  .time-duration { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--navy); margin-top: 4px; }
+  .block-focus { font-size: 10px; font-weight: 500; color: var(--text-muted); margin-top: 3px; }
+  .time-content { padding: 14px 0; }
+  .block-title { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 14px; }
+
+  /* ── STEPS ── */
+  .steps { list-style: none; }
+  .steps li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step-num {
+    min-width: 24px; height: 24px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: var(--navy-muted);
+    margin-top: 1px; flex-shrink: 0;
+  }
+  .step-text { flex: 1; color: var(--text-body); }
+  .step-text strong { color: var(--navy); font-weight: 600; }
+  .tool {
+    display: inline-block; background: var(--sage-bg);
+    border: 1px solid var(--sage-border); border-radius: 3px;
+    padding: 1px 7px; font-size: 11px; font-weight: 500;
+    color: var(--sage); letter-spacing: 0.04em;
+  }
+  .action { color: var(--rust); font-weight: 600; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--amber-bg); border: 1px solid var(--amber-border);
+    border-radius: 6px; padding: 14px 18px; margin-top: 16px;
+    font-size: 13px; color: #4a3808; line-height: 1.7;
+  }
+  .callout strong { color: var(--amber); font-weight: 600; }
+
+  /* ── TIER CARDS ── */
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .tier-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 22px; position: relative; overflow: hidden;
+  }
+  .tier-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .tier1::before { background: var(--tier1); }
+  .tier2::before { background: var(--tier2); }
+  .tier3::before { background: var(--tier3); }
+  .tier-label { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+  .tier1 .tier-label { color: var(--tier1); }
+  .tier2 .tier-label { color: var(--tier2); }
+  .tier3 .tier-label { color: var(--tier3); }
+  .tier-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+  .tier-effort { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; margin-bottom: 2px; }
+  .tier1 .tier-effort { color: var(--tier1); }
+  .tier2 .tier-effort { color: var(--tier2); }
+  .tier3 .tier-effort { color: var(--tier3); }
+  .tier-desc { color: var(--text-muted); font-size: 12px; line-height: 1.7; margin-top: 14px; }
+  .tier-criteria { margin-top: 16px; }
+  .tier-criteria-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px; }
+  .criteria-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 7px; font-size: 12px; color: var(--text-body); }
+  .criteria-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .tier1 .criteria-dot { background: var(--tier1); }
+  .tier2 .criteria-dot { background: var(--tier2); }
+  .tier3 .criteria-dot { background: var(--tier3); }
+
+  /* ── WARM BANNER ── */
+  .warm-banner {
+    background: var(--plum-bg); border: 1px solid var(--plum-border);
+    border-radius: 8px; padding: 22px 26px; margin-bottom: 32px;
+  }
+  .warm-banner-label { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--plum); margin-bottom: 8px; }
+  .warm-banner h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .warm-banner p { color: #3a2a4a; font-size: 13px; line-height: 1.8; }
+  .warm-banner strong { color: var(--plum); font-weight: 600; }
+
+  /* ── RHYTHM ROWS ── */
+  .rhythm-row {
+    display: grid; grid-template-columns: 64px 90px 1fr;
+    gap: 16px; align-items: start;
+    padding: 18px 0; border-bottom: 1px solid var(--border-light);
+  }
+  .rhythm-row:first-child { border-top: 1px solid var(--border-light); }
+  .r-day { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px; color: var(--navy); }
+  .r-meta { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); padding-top: 2px; }
+  .r-action { font-size: 13px; color: var(--text-body); line-height: 1.75; }
+  .r-action strong { color: var(--navy); font-weight: 600; }
+  .r-action em { color: var(--text-muted); }
+
+  /* ── TEMPLATE BLOCKS (calls, scripts) ── */
+  .template-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 20px; overflow: hidden;
+  }
+  .template-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border-light);
+    background: var(--surface2); display: flex; justify-content: space-between; align-items: center;
+  }
+  .template-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage); }
+  .template-tag { font-size: 11px; color: var(--text-muted); }
+  .template-body { padding: 22px; font-size: 13px; line-height: 1.9; color: var(--text-body); }
+  .placeholder { color: var(--rust); font-style: italic; }
+  .template-note {
+    font-size: 12px; color: var(--text-muted); margin-top: 14px;
+    border-top: 1px solid var(--border-light); padding-top: 12px; line-height: 1.7;
+  }
+  .template-note strong { color: var(--amber); font-weight: 600; }
+
+  /* ── EMAIL BLOCKS (distinct from call scripts) ── */
+  .email-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 20px; overflow: hidden;
+  }
+  .email-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border-light);
+    background: var(--navy); display: flex; justify-content: space-between; align-items: center;
+  }
+  .email-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a8c8b0; }
+  .email-tag { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .email-subject {
+    padding: 10px 22px; background: var(--surface2);
+    border-bottom: 1px solid var(--border-light);
+    font-size: 11px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .email-subject-label { font-weight: 600; color: var(--navy-muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
+  .email-subject-value { color: var(--text-body); font-style: italic; }
+  .email-body {
+    padding: 24px 22px; font-size: 13.5px;
+    line-height: 2; color: var(--text-body);
+    font-family: 'Inter', sans-serif;
+  }
+  .email-body .email-line { display: block; margin-bottom: 14px; }
+  .email-body .email-line:last-child { margin-bottom: 0; }
+  .email-body .greeting { font-weight: 500; color: var(--navy); }
+  .email-body .line1 { font-size: 14px; }
+  .email-body .line2 { font-size: 13.5px; }
+  .email-body .line3 { font-size: 13px; }
+  .email-body .line4 { font-size: 13px; color: var(--navy-muted); }
+  .email-body .signoff { color: var(--text-muted); margin-top: 4px; }
+  .email-note {
+    padding: 14px 22px; font-size: 12px; color: var(--text-muted);
+    border-top: 1px solid var(--border-light); background: var(--surface2); line-height: 1.7;
+  }
+  .email-note strong { color: var(--amber); font-weight: 600; }
+  .riq-badge {
+    display: inline-flex; gap: 6px; margin-bottom: 16px;
+    padding: 0 22px;
+  }
+  .riq-pill {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 3px;
+  }
+  .riq-r { background: var(--slate-bg); color: var(--slate); border: 1px solid var(--slate-border); }
+  .riq-i { background: var(--sage-bg); color: var(--sage); border: 1px solid var(--sage-border); }
+  .riq-q { background: var(--rust-bg); color: var(--rust); border: 1px solid var(--rust-border); }
+
+  /* ── SEQUENCE ── */
+  .sequence { margin-bottom: 32px; }
+  .seq-row {
+    display: grid; grid-template-columns: 56px 72px 1fr;
+    gap: 16px; align-items: start;
+    padding: 14px 0; border-bottom: 1px solid var(--border-light);
+  }
+  .seq-row:first-child { border-top: 1px solid var(--border-light); }
+  .seq-day { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px; color: var(--navy); }
+  .seq-type { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); padding-top: 2px; }
+  .seq-action { font-size: 13px; color: var(--text-body); line-height: 1.7; }
+  .seq-action em { color: var(--text-muted); }
+
+  /* ── PROMPT BLOCKS ── */
+  .prompt-block { background: var(--navy); border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+  .prompt-header {
+    padding: 12px 22px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .prompt-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a8c8b0; }
+  .prompt-tag { font-size: 11px; color: rgba(255,255,255,0.32); }
+  .prompt-body {
+    padding: 22px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; line-height: 1.85; color: rgba(255,255,255,0.75);
+  }
+  .prompt-body .bracket { color: #f0c878; }
+  .prompt-note {
+    font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;
+    font-family: 'Inter', sans-serif; line-height: 1.7;
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (max-width: 768px) {
+    .header, .nav, .main { padding-left: 20px; padding-right: 20px; }
+    .tier-grid, .metrics-grid { grid-template-columns: 1fr; }
+    .time-block { grid-template-columns: 1fr; }
+    .time-label { border-right: none; border-bottom: 1px solid var(--border); margin-right: 0; padding: 0 0 12px; margin-bottom: 12px; }
+    .rhythm-row, .seq-row { grid-template-columns: 1fr; }
+    .edit-toggle-wrap { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="edit-banner">✎  Edit mode on — click any text to edit. Changes save automatically.</div>
+
+<div class="header">
+  <div class="header-label">Justworks AE · Outbound System v3.0</div>
+  <h1>The <em>Prioritization</em><br>Playbook</h1>
+  <div class="header-sub">Stop pushing the boulder. Find the resonance.</div>
+  <div class="header-meta">
+    <div class="meta-pill">Target: <strong contenteditable="false" data-key="meta-target">4–5 opps/mo</strong></div>
+    <div class="meta-pill">ROE: <strong contenteditable="false" data-key="meta-roe">300 accounts</strong></div>
+    <div class="meta-pill">Warm Pipeline: <strong contenteditable="false" data-key="meta-warm">34 accounts</strong></div>
+    <div class="edit-toggle-wrap">
+      <div class="edit-toggle" id="editToggle" onclick="toggleEditMode()">
+        <div class="edit-dot"></div>
+        <span id="editLabel">Edit Mode</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="showSection('foundation')">01 Foundation</div>
+  <div class="nav-tab" onclick="showSection('tiering')">02 Account Tiering</div>
+  <div class="nav-tab" onclick="showSection('weekly')">03 Weekly Rhythm</div>
+  <div class="nav-tab" onclick="showSection('daily')">04 Daily Playbook</div>
+  <div class="nav-tab" onclick="showSection('messaging')">05 Messaging</div>
+  <div class="nav-tab" onclick="showSection('sequences')">06 Sequences</div>
+  <div class="nav-tab" onclick="showSection('chatae')">07 ChatAE Workflow</div>
+</div>
+
+<div class="main">
+
+  <!-- 01 FOUNDATION -->
+  <div class="section active" id="section-foundation">
+    <div class="section-title" contenteditable="false" data-key="f-title">Foundation & Mindset</div>
+    <div class="section-desc" contenteditable="false" data-key="f-desc">Before touching a single tool, internalize the operating system this playbook runs on.</div>
+
+    <div class="principle">
+      <div class="principle-label">Core Law #1 — The Prioritization Game</div>
+      <p contenteditable="false" data-key="f-p1">Sales is not a numbers game. It is not a personalization game. It is a <strong>Prioritization Game.</strong> You have finite attention. Every minute spent on a closed buying window is a withdrawal from your reputation account. Your one job: find accounts where the cost of the status quo just exceeded the cost of change, then show up with precision.</p>
+    </div>
+    <div class="principle">
+      <div class="principle-label">Core Law #2 — Demand Harvesting, Not Demand Creation</div>
+      <p contenteditable="false" data-key="f-p2">You do not manufacture urgency. You find it. A company only enters a buying window when three things align simultaneously: <strong>Budget exists. Pain is acute. Leadership has a mandate.</strong> Your job is to identify when all three are true, not to argue someone into them.</p>
+    </div>
+    <div class="principle">
+      <div class="principle-label">Core Law #3 — The RIQ Framework</div>
+      <p contenteditable="false" data-key="f-p3">Every touchpoint follows Relevance, Insight, Question. Lead with their specific situation, share a consequence they may not have connected yet, then ask a single low-friction question that confirms whether it is a priority. <strong>You are not pitching a meeting. You are earning the right to ask for one.</strong></p>
+    </div>
+    <div class="principle">
+      <div class="principle-label">Core Law #4 — The Half-Life of Intent</div>
+      <p contenteditable="false" data-key="f-p4">A signal spotted today is 10x more valuable than the same signal spotted next week. When a Tier 1 account shows a trigger event, it goes to the top of your daily queue immediately. <strong>Speed to relevance beats speed to lead.</strong></p>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title" style="font-size:22px; margin-bottom:18px;">Your Target: How 4–5 Opps/Month Gets Built</div>
+    <div class="metrics-grid">
+      <div class="metric-card"><span class="metric-num" contenteditable="false" data-key="m1">34</span><div class="metric-label" contenteditable="false" data-key="m1l">Warm accounts (active priority)</div></div>
+      <div class="metric-card"><span class="metric-num" contenteditable="false" data-key="m2">~60</span><div class="metric-label" contenteditable="false" data-key="m2l">Tier 1 accounts (high ICP fit)</div></div>
+      <div class="metric-card"><span class="metric-num" contenteditable="false" data-key="m3">~100</span><div class="metric-label" contenteditable="false" data-key="m3l">Tier 2 accounts (solid fit)</div></div>
+      <div class="metric-card"><span class="metric-num" style="color:var(--text-muted)" contenteditable="false" data-key="m4">~140</span><div class="metric-label" contenteditable="false" data-key="m4l">Tier 3 accounts (low-touch only)</div></div>
+    </div>
+    <div class="principle" style="border-left-color:var(--rust);">
+      <div class="principle-label" style="color:var(--rust);">The Math</div>
+      <p contenteditable="false" data-key="f-math">Your 34 warm accounts are your <strong>immediate pipeline.</strong> Work them correctly with multi-threading and timed outreach and they alone should produce 2 to 3 opps per month. The remaining 1 to 2 opps come from Tier 1 accounts showing trigger signals. Everything else is brand maintenance, not your focus right now.</p>
+    </div>
+  </div>
+
+  <!-- 02 TIERING -->
+  <div class="section" id="section-tiering">
+    <div class="section-title" contenteditable="false" data-key="t-title">Account Tiering</div>
+    <div class="section-desc" contenteditable="false" data-key="t-desc">Your first and most important task. Do this once, then update monthly. This determines where every minute goes.</div>
+
+    <div class="warm-banner">
+      <div class="warm-banner-label">⚡ Immediate Priority</div>
+      <h3 contenteditable="false" data-key="twh">Your 34 Warm Accounts Are Your Phase 1</h3>
+      <p contenteditable="false" data-key="twp">You already have company name, current provider, renewal month, and prior conversation context for 34 accounts. These are the highest-signal accounts in your ROE. Before building lists or tiering your other 266 accounts, get a complete and updated record on each of these 34 in Salesforce first.</p>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Warm Account Setup Checklist</div>
+    <ul class="steps" style="margin-bottom:32px;">
+      <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="ts1">Open a Google Sheet. Columns: Company, Provider, Renewal Month, HC, Vertical, Decision Maker Name, DM Title, DM LinkedIn, Secondary Contact, Notes, Tier, Next Touch Date.</div></li>
+      <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="ts2"><span class="tool">Fullenrich</span> Enrich each company to surface all contacts (COO, CFO, HR Director, CEO). You want 2 to 3 contacts per account, not just one.</div></li>
+      <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="ts3"><span class="tool">Sales Nav</span> Verify current titles, check for recent job changes (new hire equals trigger event), and note any mutual connections.</div></li>
+      <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="ts4">Flag any account whose renewal is within 90 days as <strong>RED</strong>. 91 to 180 days is <strong>YELLOW</strong>. These are your calling priority this week.</div></li>
+      <li><div class="step-num">5</div><div class="step-text" contenteditable="false" data-key="ts5">Log everything in Salesforce with a task for next touch. This sheet is your live war room, not a one-time exercise.</div></li>
+    </ul>
+
+    <hr class="divider">
+    <div class="block-title" style="margin-bottom:20px;">Tiering Your Remaining 266 Accounts</div>
+    <div class="tier-grid">
+      <div class="tier-card tier1">
+        <div class="tier-label">Tier 1 — Hemorrhage</div>
+        <div class="tier-name">High Signal</div>
+        <div class="tier-effort">70%</div>
+        <div style="font-size:11px;color:var(--text-muted);">of your outbound effort</div>
+        <div class="tier-criteria">
+          <div class="tier-criteria-title">Qualifies if:</div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t1c1">15 to 200 employees</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t1c2">Over 20% YoY headcount growth</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t1c3">High-compliance verticals: Biotech, Fintech, SaaS, Software Dev, AI</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t1c4">Known trigger: new exec hire, funding round, geographic expansion</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t1c5">Known renewal within 6 months</span></div>
+        </div>
+        <div class="tier-desc" contenteditable="false" data-key="t1d">Bespoke multi-threaded outreach. Call, custom email, and LinkedIn. You are investing real creative energy here.</div>
+      </div>
+      <div class="tier-card tier2">
+        <div class="tier-label">Tier 2 — Stable Wound</div>
+        <div class="tier-name">Solid Fit</div>
+        <div class="tier-effort">20%</div>
+        <div style="font-size:11px;color:var(--text-muted);">of your outbound effort</div>
+        <div class="tier-criteria">
+          <div class="tier-criteria-title">Qualifies if:</div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t2c1">10 to 150 employees</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t2c2">10 to 20% YoY growth</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t2c3">Verticals: Digital Marketing, Nonprofits, Wealth Mgmt, IT</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t2c4">No known trigger yet, but solid ICP fit</span></div>
+        </div>
+        <div class="tier-desc" contenteditable="false" data-key="t2d">Semi-modular outreach. Call and Salesloft cadence with inserted templates. Touch bi-weekly. Watch for signals that upgrade to Tier 1.</div>
+      </div>
+      <div class="tier-card tier3">
+        <div class="tier-label">Tier 3 — Scrape</div>
+        <div class="tier-name">Low Priority</div>
+        <div class="tier-effort">10%</div>
+        <div style="font-size:11px;color:var(--text-muted);">of your outbound effort</div>
+        <div class="tier-criteria">
+          <div class="tier-criteria-title">Qualifies if:</div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t3c1">Under 10 or over 200 employees</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t3c2">Under 10% YoY growth</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t3c3">Fringe vertical fit</span></div>
+          <div class="criteria-item"><div class="criteria-dot"></div><span contenteditable="false" data-key="t3c4">No signals, no known trigger</span></div>
+        </div>
+        <div class="tier-desc" contenteditable="false" data-key="t3d">Automated cadence only. Do not invest manual time. If they respond or show a signal, re-evaluate their tier immediately.</div>
+      </div>
+    </div>
+    <div class="callout" contenteditable="false" data-key="t-note"><strong>Tiering is not permanent.</strong> Every Monday, scan your Tier 2 list for new signals: funding, exec hire, job postings, news. Any account showing a trigger moves to Tier 1 immediately. Any Tier 1 account that goes dark for 6+ weeks moves to Tier 2.</div>
+  </div>
+
+  <!-- 03 WEEKLY RHYTHM -->
+  <div class="section" id="section-weekly">
+    <div class="section-title" contenteditable="false" data-key="w-title">Weekly Rhythm</div>
+    <div class="section-desc" contenteditable="false" data-key="w-desc">Your week has a fixed architecture. Every day has a job. Deviation costs you pipeline.</div>
+
+    <div class="principle">
+      <div class="principle-label">Your Weekly Time Budget</div>
+      <p contenteditable="false" data-key="w-budget">Monday or Friday is your slow day with a 90-minute block. Tuesday, Wednesday, and Thursday are busy days with two 30-minute blocks each. Total outbound time per week is roughly 3.5 to 4.5 hours. Every minute is allocated.</p>
+    </div>
+
+    <div class="principle" style="border-left-color:var(--slate);">
+      <div class="principle-label" style="color:var(--slate);">What is Profiling?</div>
+      <p contenteditable="false" data-key="w-profiling-def">Profiling means calling or emailing a non-DM contact at an account you are actively working — an office manager, admin, coordinator, HR coordinator, benefits admin, or any available employee — to gather intelligence before or while engaging the DM. The goal is not to sell. The goal is to learn: who is the actual decision maker, what is their current payroll and HR setup, when do they renew, what is painful about their current solution, and what would need to be true for them to consider a change. A profiled account is a loaded gun. When you finally reach the DM you already know their world — and that changes the entire conversation.</p>
+    </div>
+
+    <div style="margin-bottom:32px;">
+      <div class="rhythm-row">
+        <div><div class="r-day" style="color:var(--sage);">MON</div><div class="r-meta">90 min<br>Slow Day</div></div>
+        <div></div>
+        <div class="r-action" contenteditable="false" data-key="w-mon"><strong>Strategy and Signal Scan.</strong> Re-tier accounts, scan for triggers on your Tier 1 list, build the week's call queue, update Sheets, and load Salesloft cadences. No calls on Monday — you are preparing the battlefield. <em>Output: A ranked call list of 15 to 20 accounts for the week, sorted by tier and urgency.</em></div>
+      </div>
+      <div class="rhythm-row">
+        <div><div class="r-day" style="color:var(--rust);">TUE</div><div class="r-meta">2×30 min<br>Busy Day</div></div>
+        <div></div>
+        <div class="r-action" contenteditable="false" data-key="w-tue"><strong>Warm Account Calls (Block 1) and Tier 1 Calls + Profiling (Block 2).</strong> Block 1: Call RED warm accounts with renewals under 90 days. Profile non-DMs at accounts where the DM has not responded after 2 attempts. Block 2: Work down your Tier 1 call list — DM dials first, profiling calls fill the gaps. Leave voicemails and send follow-up emails same day. <em>Target: 10 to 15 dials total across DM and profiling calls.</em></div>
+      </div>
+      <div class="rhythm-row">
+        <div><div class="r-day" style="color:var(--slate);">WED</div><div class="r-meta">2×30 min<br>Busy Day</div></div>
+        <div></div>
+        <div class="r-action" contenteditable="false" data-key="w-wed"><strong>LinkedIn Touches (Block 1) and Tier 1, Tier 2, and Profiling Calls (Block 2).</strong> Block 1: Send LinkedIn connection requests and messages to secondary contacts at Tier 1 accounts. Block 2: Continue Tier 1 call list, then Tier 2, with profiling calls filling gaps between DM attempts. <em>Target: 8 to 10 LinkedIn touches, 8 to 10 dials.</em></div>
+      </div>
+      <div class="rhythm-row">
+        <div><div class="r-day" style="color:var(--rust);">THU</div><div class="r-meta">2×30 min<br>Busy Day</div></div>
+        <div></div>
+        <div class="r-action" contenteditable="false" data-key="w-thu"><strong>Follow-Up Calls (Block 1) and Email Block (Block 2).</strong> Block 1: Call back anyone who did not answer Tuesday or Wednesday. Block 2: Use ChatAE to draft and insert emails into Salesloft. <em>Target: 10 dials, 5 to 8 emails sent.</em></div>
+      </div>
+      <div class="rhythm-row">
+        <div><div class="r-day" style="color:var(--sage);">FRI</div><div class="r-meta">90 min<br>Slow Day</div></div>
+        <div></div>
+        <div class="r-action" contenteditable="false" data-key="w-fri"><strong>Websets List Building, Salesforce Hygiene, and Pipeline Review.</strong> Build next week's Tier 1 additions, update SFDC on all contacts touched, and log outcomes. <em>Output: Clean SFDC, next week's list pre-loaded, all warm replies actioned.</em></div>
+      </div>
+    </div>
+    <div class="callout" contenteditable="false" data-key="w-note"><strong>On alternate weeks,</strong> swap Friday's list-building block for a deeper research session on your top 5 Tier 1 accounts. Pull news, LinkedIn posts, job postings, and funding announcements. Update your messaging before calling them again the following week.</div>
+  </div>
+
+  <!-- 04 DAILY PLAYBOOK -->
+  <div class="section" id="section-daily">
+    <div class="section-title" contenteditable="false" data-key="d-title">Daily Playbook</div>
+    <div class="section-desc" contenteditable="false" data-key="d-desc">Exact steps for every block type. Open this tab before each block and execute in order.</div>
+    <div class="day-grid">
+
+      <div class="day-card open" id="card-mon">
+        <div class="day-header" onclick="toggleCard('card-mon')">
+          <div class="day-title">Monday — Strategy & Signal Scan</div>
+          <div class="day-meta"><div class="day-badge badge-slow">Slow Day · 90 min</div><div class="chevron">▾</div></div>
+        </div>
+        <div class="day-body">
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block</div><div class="time-duration">90m</div><div class="block-focus">Strategy</div></div>
+            <div class="time-content">
+              <div class="block-title">0:00 – 0:20 · Signal Scan and Re-Tiering</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dm1"><span class="tool">Sales Nav</span> Open your Tier 1 saved lead list. Filter by "Changed jobs in last 30 days" and "Posted on LinkedIn in last 30 days." Flag any new C-suite or VP hire as an immediate Tier 1 upgrade.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dm2"><span class="tool">Google Sheets</span> Open your warm account tracker. Any account renewing in under 60 days not called in 2+ weeks goes to the top of Tuesday's call list.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dm3">Quick news scan on top 10 Tier 1 accounts: search "[Company] funding" or "[Company] expansion." Note any hits in Sheets under the Opener column.</div></li>
+              </ul>
+              <div class="block-title" style="margin-top:20px;">0:20 – 0:50 · Build the Week's Call Queue</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dm4"><span class="tool">Google Sheets</span> Sort by: Warm RED renewal first, then Tier 1 with signal, then Tier 1 no signal, then Tier 2. Your call sheet columns should include: Company, Contact Name, Title, Direct Dial, Tier, Signal/Trigger, Last Touch, Priority Rank, Profile Intel (DM name, current provider, renewal, pain points gathered from non-DM calls).</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dm5">Target 15 to 20 accounts in your queue. If over 20, cut the bottom — tiering is not strict enough.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dm6"><span class="tool">Salesloft</span> Confirm Tier 1 and Tier 2 accounts are enrolled in a cadence. Flag blank email steps that need manual inserts for Thursday's email block.</div></li>
+              </ul>
+              <div class="block-title" style="margin-top:20px;">0:50 – 1:10 · ChatAE Prep</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dm7"><span class="tool">ChatAE</span> Run the Signal-to-Opener prompt for the top 5 Tier 1 accounts. Paste output into the Opener column in Sheets.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dm8">Run the Renewal Pressure prompt for warm accounts with a known provider and renewal month. Note the specific angle for each provider.</div></li>
+              </ul>
+              <div class="block-title" style="margin-top:20px;">1:10 – 1:30 · SFDC Hygiene</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dm9"><span class="tool">Salesforce</span> Log all unlogged activity from last week. Close out dead-end accounts as "No Signal — Re-evaluate Q+1."</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dm10">Set tasks for the week's priority accounts with due dates that match your call schedule.</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-card" id="card-tue">
+        <div class="day-header" onclick="toggleCard('card-tue')">
+          <div class="day-title">Tuesday — Warm Calls + Tier 1 Calls + Profiling</div>
+          <div class="day-meta"><div class="day-badge badge-busy">Busy Day · 2×30 min</div><div class="chevron">▾</div></div>
+        </div>
+        <div class="day-body">
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 1</div><div class="time-duration">30m</div><div class="block-focus">Warm Calls</div></div>
+            <div class="time-content">
+              <div class="block-title">Warm Account Calls — RED Renewals First</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dt1"><span class="tool">Google Sheets</span> Sort by renewal proximity. Start with accounts renewing in under 90 days.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dt2"><span class="action">Call the decision maker first</span> using the direct dial from Fullenrich. Use your prepared opener from Monday's ChatAE prep. Target 6 to 8 dials.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dt3">No answer: leave a voicemail under 12 seconds, then send the follow-up email via Salesloft immediately.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dt4">Live connect: use the call framework in the Messaging tab. Book the meeting before hanging up. Log in SFDC within 2 minutes.</div></li>
+                <li><div class="step-num">5</div><div class="step-text" contenteditable="false" data-key="dt5"><strong>Profiling rule:</strong> For any warm account where the DM has not responded after 2 attempts, use remaining dials in this block to call a non-DM contact at that company. Use the Profiling Call script in the Messaging tab. Log every piece of intel gathered in Sheets immediately.</div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 2</div><div class="time-duration">30m</div><div class="block-focus">Tier 1 + Profile</div></div>
+            <div class="time-content">
+              <div class="block-title">Tier 1 Signal Accounts + Parallel Profiling</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dt6">Open Tier 1 call queue in Sheets. Start at the top — highest signal first.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dt7"><span class="action">Call the DM using your signal-based opener.</span> Every call has a specific why-now reason — never use a generic opener.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dt8">No answer on DM: leave voicemail, send Salesloft email within 30 minutes, then immediately call a non-DM contact at the same account to profile while the DM outreach is in flight.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dt9">Target 6 to 8 dials total across DM and profiling calls. Log all intel gathered in SFDC and Sheets.</div></li>
+              </ul>
+              <div class="callout" contenteditable="false" data-key="dt-note"><strong>Time discipline:</strong> Set a 30-minute timer. When it goes off, stop. Profiling calls fill dead air between DM attempts — they never replace DM calls as the primary action.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-card" id="card-wed">
+        <div class="day-header" onclick="toggleCard('card-wed')">
+          <div class="day-title">Wednesday — LinkedIn Multi-Threading + Calls</div>
+          <div class="day-meta"><div class="day-badge badge-busy">Busy Day · 2×30 min</div><div class="chevron">▾</div></div>
+        </div>
+        <div class="day-body">
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 1</div><div class="time-duration">30m</div><div class="block-focus">LinkedIn</div></div>
+            <div class="time-content">
+              <div class="block-title">Multi-Thread Your Tier 1 Accounts</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dw1"><span class="tool">Sales Nav</span> Pull secondary contacts at each Tier 1 account — people not yet called. If calling the CFO, LinkedIn goes to the HR Director or COO.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dw2">Send connection requests with a brief signal-based note under 300 characters. No pitch. Example: "Hi [Name] — noticed [Company] has scaled quickly in [X]. Would love to connect."</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dw3">For anyone who connected last week, send a 2 to 3 sentence follow-up. Educate, do not sell.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dw4">Target 8 to 10 LinkedIn actions total. Log all in SFDC.</div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 2</div><div class="time-duration">30m</div><div class="block-focus">Calls + Profile</div></div>
+            <div class="time-content">
+              <div class="block-title">Continue Tier 1 List, Tier 2, and Profiling Calls</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dw5">Pick up where Tuesday's Tier 1 list left off. Anyone not reached gets another attempt.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dw6">Once Tier 1 is cycled, move to Tier 2. Use industry-specific opener — shorter, still signal-based.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dw7"><strong>Profiling calls:</strong> For any actively worked account where you still don't know the DM, current setup, or renewal window — call a non-DM contact using the Profiling Call script in the Messaging tab. These fill the gaps between DM dial attempts. Intel gathered goes straight into Sheets.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dw8">Target 8 to 10 dials total across DM, Tier 2, and profiling calls. Log everything in SFDC.</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-card" id="card-thu">
+        <div class="day-header" onclick="toggleCard('card-thu')">
+          <div class="day-title">Thursday — Follow-Up Calls + Email Block</div>
+          <div class="day-meta"><div class="day-badge badge-busy">Busy Day · 2×30 min</div><div class="chevron">▾</div></div>
+        </div>
+        <div class="day-body">
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 1</div><div class="time-duration">30m</div><div class="block-focus">Follow-Up</div></div>
+            <div class="time-content">
+              <div class="block-title">Re-Engage Tuesday and Wednesday No-Answers</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dth1">Pull SFDC task list. Call every Tier 1 account from this week that has not connected. Different time of day means different answer rate.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dth2">Third or more dial attempt on the DM: <span class="action">switch contacts.</span> If you have profiling intel from earlier this week, use it. "I spoke with [Name] earlier this week — they mentioned [DM Name] is the right person for this conversation."</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dth3">No answer on third attempt: send a LinkedIn message to the primary contact instead. Deprioritize until next week.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dth4">Live connects: use any profiling intel gathered this week to personalize the opener. Book the meeting. Log immediately.</div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block 2</div><div class="time-duration">30m</div><div class="block-focus">Email Block</div></div>
+            <div class="time-content">
+              <div class="block-title">Manual Email Inserts via Salesloft</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="dth5"><span class="tool">ChatAE</span> Run the Batch Email Prep prompt. Input 5 to 8 company names with vertical, trigger signal, and multi-state status.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="dth6"><span class="tool">Salesloft</span> Insert ChatAE-generated body into each pending blank email step for this week's Tier 1 accounts. Review before sending. Allow roughly 3 minutes per email.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="dth7">Target 5 to 8 emails sent. These are high-quality contextual emails, not blasts.</div></li>
+                <li><div class="step-num">4</div><div class="step-text" contenteditable="false" data-key="dth8">Any email opens or replies from earlier this week: <strong>that account gets a call tomorrow or Monday.</strong> Reply-to-call gap must be under 24 hours.</div></li>
+              </ul>
+              <div class="callout" contenteditable="false" data-key="dth-note"><strong>Salesloft workaround:</strong> Use the existing cadence's blank email steps as your delivery vehicle. Keep a running Google Doc with approved templates for quick copy-paste.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-card" id="card-fri">
+        <div class="day-header" onclick="toggleCard('card-fri')">
+          <div class="day-title">Friday — Pipeline Review + List Build</div>
+          <div class="day-meta"><div class="day-badge badge-slow">Slow Day · 90 min</div><div class="chevron">▾</div></div>
+        </div>
+        <div class="day-body">
+          <div class="time-block">
+            <div class="time-label"><div class="time-text">Block</div><div class="time-duration">90m</div><div class="block-focus">Review</div></div>
+            <div class="time-content">
+              <div class="block-title">0:00 – 0:30 · Pipeline Review and SFDC Update</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="df1"><span class="tool">Salesforce</span> Log every activity from the week. Any account you touched that is not logged does not exist.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="df2">Review weekly metrics: dials, connects, conversations, meetings booked, LinkedIn replies, emails sent, open rate. Note in Sheets.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="df3">For any account that showed engagement, create a follow-up task in SFDC with a date and a clear next action.</div></li>
+              </ul>
+              <div class="block-title" style="margin-top:20px;">0:30 – 1:00 · Websets List Building</div>
+              <ul class="steps">
+                <li><div class="step-num">1</div><div class="step-text" contenteditable="false" data-key="df4"><span class="tool">Websets</span> Fresh filter pass on your ROE: top 3 performing verticals, YoY growth over 20%, HC 15 to 200.</div></li>
+                <li><div class="step-num">2</div><div class="step-text" contenteditable="false" data-key="df5">Add 5 to 10 new accounts to your Tier 1 or Tier 2 list in Sheets. Do not add more than 10.</div></li>
+                <li><div class="step-num">3</div><div class="step-text" contenteditable="false" data-key="df6"><span class="tool">Fullenrich</span> Enrich new accounts for contacts and direct dials. Load into SFDC and Salesloft before end of day.</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 05 MESSAGING -->
+  <div class="section" id="section-messaging">
+    <div class="section-title" contenteditable="false" data-key="msg-title">Messaging Frameworks</div>
+    <div class="section-desc" contenteditable="false" data-key="msg-desc">Every touchpoint follows RIQ: Relevance, Insight, Question. Lead with their world. Earn the meeting — don't ask for it on the first email.</div>
+
+    <div class="principle">
+      <div class="principle-label">The RIQ Email Rule</div>
+      <p contenteditable="false" data-key="msg-rule">Do not ask for a meeting in a first email. Ask an interest-based question that confirms whether the insight you shared is a priority for them right now. A busy executive should be able to reply "yes" or "tell me more" in under 5 seconds. Once they reply yes, you have earned the right to ask for the meeting in your next message.</p>
+    </div>
+
+    <div class="block-title" style="margin-bottom:20px;">Live Call Scripts</div>
+
+    <div class="template-block">
+      <div class="template-header"><div class="template-title">Profiling Call Script — Non-DM Contact</div><div class="template-tag">Any non-DM · office mgr, admin, coordinator, HR coordinator, employee</div></div>
+      <div class="template-body" contenteditable="false" data-key="mc-profile">"Hey [Name], this is [Your Name] from Justworks. I'm trying to make sure I'm reaching the right person over there — can you help me for just a second?"
+
+[They say yes]
+
+"We work with a lot of [Vertical] companies around your size, specifically around payroll, benefits, and HR. I just want to make sure I'm connecting with whoever oversees that side of the business. Do you know who that would be?"
+
+[Get the name and title. Then:]
+
+"That's really helpful, thank you. Just one more quick question — do you know if [Company] handles payroll in-house or through a provider like Gusto, Rippling, or a PEO?"
+
+[Note whatever they share. Then:]
+
+"Perfect, I really appreciate it. I'll follow up directly with [DM Name]. Have a great day."
+<div class="template-note"><strong>What you are trying to learn on every profiling call:</strong> Who is the actual DM (name and title). What is their current payroll and HR setup (provider name if possible). When does their contract or plan renew. Any pain points or frustrations they have mentioned. Whether HR is handled internally or outsourced. Log everything in your Sheets tracker under the "Profile Intel" column immediately after the call. A profiled account where the DM doesn't answer is still a massive advantage — you now know exactly what to say when they pick up.</div></div>
+    </div>
+
+    <div class="template-block">
+      <div class="template-header"><div class="template-title">DM Call Opener — Post-Profiling (When You Have Intel)</div><div class="template-tag">Use when you have spoken to a non-DM contact first</div></div>
+      <div class="template-body" contenteditable="false" data-key="mc-postprofile">"Hey [DM Name], this is [Your Name] from Justworks. I spoke with [Contact Name] earlier this week and they pointed me your way. I understand you all are currently with [Provider] — I work with a lot of [Vertical] companies at your size who are either outgrowing that setup or starting to feel it at renewal. Do you have 90 seconds?"
+<div class="template-note">This opener immediately signals you are not a cold caller. You spoke to someone internally, you know their setup, and you are relevant. The DM's guard drops because you are already inside the company's context before the conversation begins.</div></div>
+    </div>
+
+    <div class="template-block">
+      <div class="template-header"><div class="template-title">Cold Call Opener — Tier 1 (Signal-Based)</div><div class="template-tag">15 to 20 seconds</div></div>
+      <div class="template-body" contenteditable="false" data-key="mc1">"Hey [Name], this is [Your Name] at Justworks. I'll be quick. I noticed <span class="placeholder">[specific signal: you all brought on 18 people in the last 6 months / you just expanded into a second state / you raised a Series A in Q3].</span> That kind of growth typically puts a ton of pressure on HR and payroll infrastructure. I work with companies at exactly this stage. Do you have 90 seconds?"
+<div class="template-note">If they say yes: "Great. Most companies in [Vertical] at your size are either cobbling together Gusto and a broker, or they are on a legacy PEO that was fine at 20 people but is getting expensive at [current HC]. Which camp are you in?" Then listen. Your only job now is to ask them to tell you more.</div></div>
+    </div>
+
+    <div class="template-block">
+      <div class="template-header"><div class="template-title">Cold Call Opener — Warm Account (Known Provider and Renewal)</div><div class="template-tag">Highest priority accounts</div></div>
+      <div class="template-body" contenteditable="false" data-key="mc2">"Hey [Name], this is [Your Name] from Justworks. We spoke briefly back in <span class="placeholder">[Month]</span> when you were with <span class="placeholder">[Provider].</span> Your renewal is coming up around <span class="placeholder">[Month]</span> and I wanted to reach out before you got too far into that process. Have things changed at all since we last talked?"
+<div class="template-note">You are not selling — you are checking in at the moment they are naturally evaluating. If they are unhappy, they will tell you. If they are happy, ask: what would have to be true for you to look at alternatives?</div></div>
+    </div>
+
+    <div class="template-block">
+      <div class="template-header"><div class="template-title">Voicemail Script</div><div class="template-tag">Under 12 seconds</div></div>
+      <div class="template-body" contenteditable="false" data-key="mvm">"Hey [Name], [Your Name] at Justworks. Calling about <span class="placeholder">[one-line signal: your expansion into Texas / your renewal with TriNet coming up].</span> I'll send you a quick note. [Your number]."
+<div class="template-note">The voicemail's only job is to make your follow-up email feel expected rather than cold. Always send the email within 30 minutes.</div></div>
+    </div>
+
+    <hr class="divider">
+    <div class="block-title" style="margin-bottom:20px;">Email Templates</div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:24px; font-style:italic;">All emails follow F-pattern structure: Line 1 longest, each line shorter than the last, final line the CTA. Subject lines in all lowercase. No dashes. No meeting ask on first touch.</p>
+
+    <!-- TEMPLATE A -->
+    <div class="email-block">
+      <div class="email-header"><div class="email-title">Template A — Cold Tier 1 (Growth or Signal Trigger)</div><div class="email-tag">Default cold outreach</div></div>
+      <div class="riq-badge" style="padding-top:14px;"><span class="riq-pill riq-r">R — their signal</span><span class="riq-pill riq-i">I — health insurance cost (default) or multi-state</span><span class="riq-pill riq-q">Q — interest-based</span></div>
+      <div class="email-subject"><span class="email-subject-label">Subject</span><span class="email-subject-value" contenteditable="false" data-key="me1-sub">health insurance is always expensive &nbsp;/&nbsp; compliance takes care of itself &nbsp;/&nbsp; [choose based on pain point]</span></div>
+      <div class="email-body" contenteditable="false" data-key="me1-body">
+        <span class="email-line greeting">Hey [Name],</span>
+        <span class="email-line line1">Since [Company] has grown from [X] to [Y] people in the past [timeframe], your team is likely buying health insurance on the open market — where smaller headcounts mean higher premiums and thinner plans than what a larger employer would get.</span>
+        <span class="email-line line2">Most companies at your stage don't realize there's a way to access large-group rates without being a large company.</span>
+        <span class="email-line line3">A PEO pools your employees with tens of thousands of others, which typically means lower premiums and richer benefits — which also helps with hiring.</span>
+        <span class="email-line line4">Is the cost of health benefits something on your radar right now?</span>
+        <span class="email-line signoff">Best,<br>Danny</span>
+      </div>
+      <div class="email-note">If multi-state is confirmed in your signal, swap the insight for: "Hiring across state lines creates a separate tax registration, leave law, and labor regulation in every new state — most teams only notice the gaps when a state agency sends a notice." Then adjust the CTA to "Is managing multi-state compliance something on your radar right now?"</div>
+    </div>
+
+    <!-- TEMPLATE B -->
+    <div class="email-block">
+      <div class="email-header"><div class="email-title">Template B — Warm Account (Known Provider and Renewal)</div><div class="email-tag">Highest priority — use with all 34 warm accounts</div></div>
+      <div class="riq-badge" style="padding-top:14px;"><span class="riq-pill riq-r">R — prior convo + renewal window</span><span class="riq-pill riq-i">I — provider-specific pain</span><span class="riq-pill riq-q">Q — low-friction re-engage</span></div>
+      <div class="email-subject"><span class="email-subject-label">Subject</span><span class="email-subject-value" contenteditable="false" data-key="me2-sub">renewals are always later &nbsp;/&nbsp; already using a peo &nbsp;/&nbsp; [choose based on situation]</span></div>
+      <div class="email-body" contenteditable="false" data-key="me2-body">
+        <span class="email-line greeting">Hey [Name],</span>
+        <span class="email-line line1">Just left you a voicemail — with your [Provider] renewal coming up around [Month], this is typically when companies take a hard look at what they are getting versus what they are paying.</span>
+        <span class="email-line line2">A lot of our clients came from [Provider] because [provider-specific pain point written naturally].</span>
+        <span class="email-line line3">Not trying to disrupt anything — just worth a quick look before you commit to another term.</span>
+        <span class="email-line line4">Is it worth a conversation before the renewal process kicks off?</span>
+        <span class="email-line signoff">Best,<br>Danny</span>
+      </div>
+      <div class="email-note"><strong>Provider pain points (rewrite naturally, do not copy verbatim):</strong> Rippling: pricing complexity increases significantly as headcount scales. Gusto: starts to feel limited as HR needs mature beyond early stage. TriNet: service model can feel hands-off relative to the cost. ADP TotalSource: built for enterprise scale, often mismatched for sub-200 companies. Bamboo HR: HR platform without native payroll creates reconciliation friction. Paychex: dated interface frustrates fast-moving teams. Insperity: pricing structure is hard to forecast at growth stage.</div>
+    </div>
+
+    <!-- TEMPLATE C -->
+    <div class="email-block">
+      <div class="email-header"><div class="email-title">Template C — Break-Up Email (Day 15 of Sequence)</div><div class="email-tag">Final touch — counterintuitively high response rate</div></div>
+      <div class="riq-badge" style="padding-top:14px;"><span class="riq-pill riq-r">R — acknowledge silence</span><span class="riq-pill riq-i">I — easy out</span><span class="riq-pill riq-q">no CTA — clean close</span></div>
+      <div class="email-subject"><span class="email-subject-label">Subject</span><span class="email-subject-value" contenteditable="false" data-key="me3-sub">not the right time for this &nbsp;/&nbsp; timing isn't right</span></div>
+      <div class="email-body" contenteditable="false" data-key="me3-body">
+        <span class="email-line greeting">Hey [Name],</span>
+        <span class="email-line line1">I have reached out a few times and have not heard back, which usually means the timing is off or I am reaching the wrong person.</span>
+        <span class="email-line line2">Either way, that is completely fine.</span>
+        <span class="email-line line3">If HR or payroll infrastructure comes up in the next six months, happy to reconnect then.</span>
+        <span class="email-line signoff">Best,<br>Danny</span>
+      </div>
+      <div class="email-note">No CTA. No question. People respond to finality — this email is a genuine close-out, not a guilt trip. Keep it exactly this short.</div>
+    </div>
+
+    <!-- LINKEDIN -->
+    <div class="email-block">
+      <div class="email-header"><div class="email-title">LinkedIn Message — Secondary Contact (Multi-Threading)</div><div class="email-tag">Wednesday block · under 280 characters</div></div>
+      <div class="email-body" contenteditable="false" data-key="mli-body">
+        <span class="email-line greeting">Hey [Name],</span>
+        <span class="email-line line1">I work with a lot of [Vertical] companies around your size and the conversation I keep having is around what happens to HR and payroll infrastructure when you grow this fast.</span>
+        <span class="email-line line2">No ask here — just curious if that is something on your radar at [Company] right now?</span>
+      </div>
+      <div class="email-note">Goal is a reply, not a meeting. If they reply, that is a warm conversation. Move to book a call or ask to loop in the right person.</div>
+    </div>
+
+  </div>
+
+  <!-- 06 SEQUENCES -->
+  <div class="section" id="section-sequences">
+    <div class="section-title" contenteditable="false" data-key="seq-title">Cadence and Sequence Structure</div>
+    <div class="section-desc" contenteditable="false" data-key="seq-desc">Since you cannot build custom Salesloft sequences, here is how to operate inside your constraints and still run a disciplined multi-touch system.</div>
+
+    <div class="principle">
+      <div class="principle-label">Your Salesloft Workaround</div>
+      <p contenteditable="false" data-key="seq-note">You have a cadence with poor copy and blank email steps. The plan: <strong>use the blank email steps as your delivery vehicle</strong> and insert ChatAE-generated copy manually on Thursdays. All calls are made outside the sequence using your Sheets call queue. Track all touches in SFDC manually.</p>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Tier 1 Touch Sequence — 21 Days</div>
+    <div class="sequence">
+      <div class="seq-row"><div class="seq-day">D1</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="sq1">Call primary DM (COO, CFO, or HR Director). Use signal-based opener. No answer: leave voicemail and send email within 30 minutes.</div></div>
+      <div class="seq-row"><div class="seq-day">D1</div><div class="seq-type">Email</div><div class="seq-action" contenteditable="false" data-key="sq2">Template A or B via Salesloft — manually inserted. Subject line in lowercase, objection-based where possible.</div></div>
+      <div class="seq-row"><div class="seq-day">D3</div><div class="seq-type">LinkedIn</div><div class="seq-action" contenteditable="false" data-key="sq3">Connect with secondary contact — different role than who you called. Brief note, no pitch. <em>Threading begins here.</em></div></div>
+      <div class="seq-row"><div class="seq-day">D5</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="sq4">Call primary DM again with a new angle — reference the email. "I sent you a note earlier this week about [signal] and wanted to see if it landed." No voicemail if no answer.</div></div>
+      <div class="seq-row"><div class="seq-day">D7</div><div class="seq-type">Email</div><div class="seq-action" contenteditable="false" data-key="sq5">Unique POV email — lead with an industry insight, not a product feature. ChatAE-generated. Three sentences max. <em>Educates rather than sells.</em></div></div>
+      <div class="seq-row"><div class="seq-day">D10</div><div class="seq-type">LinkedIn</div><div class="seq-action" contenteditable="false" data-key="sq6">Follow up with secondary contact who connected. 2 to 3 sentence curiosity message. No pitch — ask a question.</div></div>
+      <div class="seq-row"><div class="seq-day">D12</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="sq7">Call secondary contact directly if you have their number from Fullenrich. "I have been trying to reach [DM Name]. Are they the right person for a conversation about HR infrastructure?"</div></div>
+      <div class="seq-row"><div class="seq-day">D15</div><div class="seq-type">Email</div><div class="seq-action" contenteditable="false" data-key="sq8">Template C — break-up email to primary DM. Short, warm, no CTA. Counterintuitively high response rate.</div></div>
+      <div class="seq-row"><div class="seq-day">D21</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="sq9">Final attempt. Try a new contact if the primary never engaged. Log the outcome. No response across all 8 touches: move to Tier 2 cadence and check back in 6 weeks or when a new signal appears.</div></div>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Tier 2 Touch Sequence — 30 Days</div>
+    <div class="sequence">
+      <div class="seq-row"><div class="seq-day">D1</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="s21">Industry-specific opener. No answer on first attempt means no voicemail — go straight to email.</div></div>
+      <div class="seq-row"><div class="seq-day">D1</div><div class="seq-type">Email</div><div class="seq-action" contenteditable="false" data-key="s22">Template A via Salesloft. Use vertical-specific version from ChatAE batch prep.</div></div>
+      <div class="seq-row"><div class="seq-day">D8</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="s23">Second attempt. Leave a voicemail this time if no answer.</div></div>
+      <div class="seq-row"><div class="seq-day">D15</div><div class="seq-type">Email</div><div class="seq-action" contenteditable="false" data-key="s24">Short 2-sentence follow-up. "Wanted to resurface this in case the timing is better now."</div></div>
+      <div class="seq-row"><div class="seq-day">D30</div><div class="seq-type">Call</div><div class="seq-action" contenteditable="false" data-key="s25">Final attempt. No response: park in "re-engage in 90 days" in SFDC and watch for signals.</div></div>
+    </div>
+    <div class="callout" contenteditable="false" data-key="seq-t3"><strong>Tier 3:</strong> Enroll in your existing Salesloft automated cadence and do not touch manually. If they respond, re-evaluate their tier immediately.</div>
+  </div>
+
+  <!-- 07 CHATAE -->
+  <div class="section" id="section-chatae">
+    <div class="section-title" contenteditable="false" data-key="c-title">ChatAE Workflow</div>
+    <div class="section-desc" contenteditable="false" data-key="c-desc">Plug-and-play prompts that turn 20 minutes of research into 2 minutes of precision output. Fill in the brackets and go.</div>
+
+    <div class="principle">
+      <div class="principle-label">How to Use This Tab</div>
+      <p contenteditable="false" data-key="c-rule">Copy the prompt, fill in the brackets, paste into ChatAE. Output goes directly into your Sheets tracker or Salesloft email insert. Run Monday prompts during your Monday prep block and Thursday prompts during your Thursday email block. Never run them one-off during a call block.</p>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Prompt 1 — Signal-to-Opener (Monday Prep)</div>
+    <div class="prompt-block">
+      <div class="prompt-header"><div class="prompt-title">Call Opener and Email Subject Generator</div><div class="prompt-tag">Monday · 1 per Tier 1 account</div></div>
+      <div class="prompt-body" contenteditable="false" data-key="cp1">I'm an Account Executive at Justworks, a PEO that handles payroll, benefits, HR, and compliance for SMBs under 200 employees.
+
+I'm about to call <span class="bracket">[COMPANY NAME]</span>, a <span class="bracket">[VERTICAL]</span> company with <span class="bracket">[HC]</span> employees that has grown <span class="bracket">[YOY GROWTH]</span>% in the last year. <span class="bracket">[ADD ANY OTHER SIGNAL: e.g., They recently expanded to a second state / They just raised a Series A / Their renewal with TriNet is in 3 months]</span>
+
+Give me:
+1. A 15-second cold call opener that leads with their business situation and creates curiosity. No product pitch, no flattery.
+2. A subject line in all lowercase under 8 words that mirrors a common objection they might have — such as "health insurance is always expensive" or "compliance takes care of itself."
+3. One cost-of-inaction statement I can use if they say they are happy with their current setup.
+
+Tone: Direct, peer-level, no buzzwords. Speak like a business advisor, not a sales rep. No dashes.
+<div class="prompt-note">Output goes into your Sheets "Opener" column. Takes 90 seconds per account. Run for your top 5 to 8 Tier 1 accounts each Monday.</div></div>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Prompt 2 — Batch Email Prep (Thursday Block)</div>
+    <div class="prompt-block">
+      <div class="prompt-header"><div class="prompt-title">5-Account Email Batch Generator</div><div class="prompt-tag">Thursday · Batch of 5 to 8</div></div>
+      <div class="prompt-body" contenteditable="false" data-key="cp2">I'm an AE at Justworks. Write 5 short outbound emails under 120 words each following the RIQ framework (Relevance, Insight, Question) and F-pattern formatting (each line shorter than the last, final line is the CTA).
+
+Rules: No dashes. No bullet points. No exclamation points. No meeting ask on first email — end with an interest-based question only. Subject lines in all lowercase, under 8 words, ideally mirroring a common objection. Sign off each email with "Best, Danny."
+
+Pain point logic: If the signal mentions multiple states or state expansion, use multi-state compliance as the insight. Otherwise default to rising health insurance cost as the insight.
+
+Accounts:
+1. <span class="bracket">[Company A]</span> — <span class="bracket">[Vertical]</span> — <span class="bracket">[HC]</span> employees — Signal: <span class="bracket">[X]</span> — Multi-state: <span class="bracket">[Yes/No/Unknown]</span>
+2. <span class="bracket">[Company B]</span> — <span class="bracket">[Vertical]</span> — <span class="bracket">[HC]</span> employees — Signal: <span class="bracket">[X]</span> — Multi-state: <span class="bracket">[Yes/No/Unknown]</span>
+3. <span class="bracket">[Company C]</span> — <span class="bracket">[Vertical]</span> — <span class="bracket">[HC]</span> employees — Signal: <span class="bracket">[X]</span> — Multi-state: <span class="bracket">[Yes/No/Unknown]</span>
+4. <span class="bracket">[Company D]</span> — <span class="bracket">[Vertical]</span> — <span class="bracket">[HC]</span> employees — Signal: <span class="bracket">[X]</span> — Multi-state: <span class="bracket">[Yes/No/Unknown]</span>
+5. <span class="bracket">[Company E]</span> — <span class="bracket">[Vertical]</span> — <span class="bracket">[HC]</span> employees — Signal: <span class="bracket">[X]</span> — Multi-state: <span class="bracket">[Yes/No/Unknown]</span>
+<div class="prompt-note">Each output gets copy-pasted directly into a Salesloft blank email step. Review before sending. Allow about 3 minutes per email in Salesloft.</div></div>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Prompt 3 — Renewal Pressure Message (Warm Accounts)</div>
+    <div class="prompt-block">
+      <div class="prompt-header"><div class="prompt-title">Known Provider and Renewal Email</div><div class="prompt-tag">Warm accounts only — highest priority</div></div>
+      <div class="prompt-body" contenteditable="false" data-key="cp3">I'm an AE at Justworks. I previously spoke to <span class="bracket">[CONTACT NAME]</span>, <span class="bracket">[TITLE]</span> at <span class="bracket">[COMPANY]</span>, a <span class="bracket">[VERTICAL]</span> company with <span class="bracket">[HC]</span> employees. They are currently on <span class="bracket">[CURRENT PROVIDER]</span> and their renewal is in <span class="bracket">[MONTH]</span>.
+
+Write me a short email under 100 words using RIQ framework and F-pattern formatting. No dashes. No meeting ask on first email — end with an interest-based question. Subject line in all lowercase under 8 words, ideally mirroring an objection like "renewals are always later" or "already using a peo." Sign off with "Best, Danny."
+
+Also give me a one-line cost-of-inaction I can use on the call if they say they are probably just going to renew.
+
+Known pain points with <span class="bracket">[CURRENT PROVIDER]</span>: <span class="bracket">[ADD ANYTHING YOU KNOW FROM PRIOR CONVERSATION, or leave blank]</span>
+<div class="prompt-note">Run this for all 34 warm accounts once, then update as you gather more intel from conversations.</div></div>
+    </div>
+
+    <div class="block-title" style="margin-bottom:16px;">Prompt 4 — Account Intelligence Brief (Alternate Fridays)</div>
+    <div class="prompt-block">
+      <div class="prompt-header"><div class="prompt-title">Deep Account Research Brief</div><div class="prompt-tag">Alternate Fridays · Top 5 Tier 1 accounts</div></div>
+      <div class="prompt-body" contenteditable="false" data-key="cp4">I'm an AE at Justworks targeting <span class="bracket">[COMPANY NAME]</span>, a <span class="bracket">[VERTICAL]</span> company with <span class="bracket">[HC]</span> employees growing at <span class="bracket">[YOY%]</span>% per year, based in <span class="bracket">[STATE]</span>.
+
+Give me:
+1. The top 3 HR, payroll, or compliance pressures a company at this stage and size typically faces.
+2. One macro industry trend affecting this vertical right now that creates urgency for getting HR infrastructure right.
+3. A unique POV statement I can use in an email or on a call — something that reframes how they are thinking about the problem.
+4. The most likely objection I will face and a one-sentence response that does not feel defensive.
+
+Keep it concise and practical. I am using this to prep a call, not write a thesis.
+<div class="prompt-note">Output updates your Sheets "Angle" column for that account. Use this to refresh your approach if you have already called them once without converting to a meeting.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="save-indicator" id="saveIndicator">Saving...</div>
+
+<script>
+  const STORAGE_KEY = 'jw_playbook_v3_edits';
+  let isEditMode = false;
+
+  function loadSavedContent() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      Object.entries(data).forEach(([key, value]) => {
+        const el = document.querySelector(`[data-key="${key}"]`);
+        if (el) el.innerHTML = value;
+      });
+    } catch(e) {}
+  }
+
+  function saveAll() {
+    const data = {};
+    document.querySelectorAll('[data-key]').forEach(el => {
+      data[el.dataset.key] = el.innerHTML;
+    });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      showSaveIndicator('Saved', true);
+    } catch(e) { showSaveIndicator('Save failed', false); }
+  }
+
+  function showSaveIndicator(msg, success) {
+    const ind = document.getElementById('saveIndicator');
+    ind.textContent = msg;
+    ind.className = 'save-indicator show' + (success ? ' saved' : '');
+    clearTimeout(window._saveHide);
+    window._saveHide = setTimeout(() => { ind.className = 'save-indicator'; }, 1800);
+  }
+
+  function scheduleAutoSave() {
+    clearTimeout(window._autoSave);
+    window._autoSave = setTimeout(saveAll, 800);
+    showSaveIndicator('Saving...', false);
+  }
+
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const toggle = document.getElementById('editToggle');
+    const label = document.getElementById('editLabel');
+    document.querySelectorAll('[data-key]').forEach(el => {
+      el.contentEditable = isEditMode ? 'true' : 'false';
+      if (isEditMode) el.addEventListener('input', scheduleAutoSave);
+      else el.removeEventListener('input', scheduleAutoSave);
+    });
+    document.body.classList.toggle('edit-mode', isEditMode);
+    toggle.classList.toggle('active', isEditMode);
+    label.textContent = isEditMode ? 'Editing' : 'Edit Mode';
+    if (!isEditMode) saveAll();
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCard(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  loadSavedContent();
+</script>
+</body>
+</html>
